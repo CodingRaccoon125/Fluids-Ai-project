@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flow past a cylinder: what changes with Reynolds number</title>
+<meta name="description" content="Interactive guide to flow past a circular cylinder, from creeping flow to the drag crisis.">
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>Flow past a cylinder</h1>
+  <p>Drag the Reynolds number slider and watch the wake change, from a symmetric creeping flow to a vortex street and beyond.</p>
+</header>
+<div class="layout">
+<main>
+  <h2>Try it first</h2>
+  <p>The simulator on the right is a real 2D lattice Boltzmann solver running in your browser for Re up to 300. Colors show vorticity: red spins counter-clockwise, blue clockwise. Above Re = 300 a browser can no longer resolve the physics, so the view switches to pre-computed footage.</p>
+  <p>Try Re = 30, then 60, then 200. Somewhere near 47 the steady wake becomes unstable and starts to shed.</p>
+
+  <h2>What the Reynolds number measures</h2>
+  <p>For a cylinder of diameter $D$ in a stream of speed $U$ and kinematic viscosity $\nu$, the Reynolds number is $\mathrm{Re}=UD/\nu$. It compares inertial forces, which carry the flow past the body, with viscous forces, which smooth velocity differences. Small Re means viscosity wins; large Re means inertia wins and the flow becomes unstable.</p>
+  <details><summary>Derivation: Navier-Stokes and nondimensionalization</summary>
+    <p>For incompressible flow of constant density $\rho$ and viscosity $\nu$:</p>
+    $$\frac{\partial \mathbf u}{\partial t}+(\mathbf u\cdot\nabla)\mathbf u=-\frac1\rho\nabla p+\nu\nabla^2\mathbf u,\qquad \nabla\cdot\mathbf u=0.$$
+    <p>Scale lengths by $D$, velocities by $U$, time by $D/U$ and pressure by $\rho U^2$:
+    $\mathbf x^*=\mathbf x/D$, $\mathbf u^*=\mathbf u/U$, $t^*=tU/D$, $p^*=p/\rho U^2$. Substituting, every term in the momentum equation carries a factor $U^2/D$ except the viscous one, which carries $\nu U/D^2$:</p>
+    $$\frac{\partial \mathbf u^*}{\partial t^*}+(\mathbf u^*\cdot\nabla^*)\mathbf u^*=-\nabla^*p^*+\frac{1}{\mathrm{Re}}\nabla^{*2}\mathbf u^*,\qquad \mathrm{Re}=\frac{UD}{\nu}.$$
+    <p>The no-slip condition $\mathbf u^*=0$ on the cylinder and uniform $\mathbf u^*=\hat{\mathbf x}$ far upstream contain no other parameters. Geometrically similar flows with equal Re are therefore the same flow.</p>
+  </details>
+
+  <h2>Regime tour</h2>
+  <p>Boundaries are approximate and vary by source and by free-stream turbulence, surface roughness and end conditions. Each button sets the simulator to a representative Re.</p>
+  <div id="regimes"></div>
+
+  <h2>Drag and shedding versus Re</h2>
+  <p>The plots follow the slider. Curves are approximate values from the literature (see the data file header for sources), not output of the simulator.</p>
+  <canvas id="plotCd" class="plot" role="img" aria-label="Drag coefficient versus Reynolds number"></canvas>
+  <canvas id="plotSt" class="plot" role="img" aria-label="Strouhal number versus Reynolds number"></canvas>
+  <p class="cap">The drag crisis near Re ≈ 3×10⁵ occurs because the boundary layer turns turbulent before separating, which delays separation and narrows the wake.</p>
+  <details><summary>Derivation: drag coefficient</summary>
+    <p>The force on the cylinder comes from pressure and viscous shear on its surface $S$:</p>
+    $$F_D=\oint_S\big(-p\,\mathbf n+\boldsymbol\tau\cdot\mathbf n\big)\cdot\hat{\mathbf x}\,dS,\qquad C_D=\frac{F_D}{\tfrac12\rho U^2DL}.$$
+    <p>Splitting $C_D=C_{D,p}+C_{D,f}$ shows that at low Re friction contributes a large share, while for Re above a few hundred pressure drag from the low-pressure wake dominates. The drag crisis is a change in $C_{D,p}$ caused by where the boundary layer separates.</p>
+  </details>
+  <details><summary>Derivation: Strouhal number</summary>
+    <p>The shedding frequency $f$ can depend only on $\rho, U, D, \mu$. That is five variables in three base dimensions (M, L, T), so the Buckingham Pi theorem gives two independent groups:</p>
+    $$\mathrm{St}=\frac{fD}{U}=\mathrm{St}(\mathrm{Re}),\qquad \mathrm{Re}=\frac{\rho UD}{\mu}.$$
+    <p>For a smooth cylinder St rises from about 0.12 at onset to about 0.2 and stays near that value over the subcritical range, so $f\approx 0.2\,U/D$.</p>
+  </details>
+
+  <h2>Where this matters</h2>
+  <p><strong>Chimneys, risers and cables.</strong> When the shedding frequency approaches a structural natural frequency, the alternating side force causes vortex-induced vibration. Helical strakes and fairings disrupt coherent shedding.</p>
+  <p><strong>Worked example.</strong> Air at 5 m/s past a 0.2 m pipe ($\nu\approx1.5\times10^{-5}$ m²/s) gives $\mathrm{Re}\approx6.7\times10^4$, in the subcritical range, so $f\approx0.2\times5/0.2=5$ Hz.</p>
+  <p><strong>Bridges.</strong> The 1940 Tacoma Narrows collapse is often cited as vortex shedding, but engineering analyses attribute it to self-excited aeroelastic flutter. Shedding does matter for slender hangers and stay cables.</p>
+  <p><strong>Sports balls.</strong> Golf-ball dimples trigger boundary-layer transition at lower Re, producing the same drag-crisis mechanism on a sphere.</p>
+
+  <h2>References</h2>
+  <ul class="refs">
+    <li>Williamson, C.H.K. (1996). Vortex dynamics in the cylinder wake. <i>Annu. Rev. Fluid Mech.</i> 28, 477–539.</li>
+    <li>Roshko, A. (1961). Experiments on the flow past a circular cylinder at very high Reynolds number. <i>J. Fluid Mech.</i> 10, 345–356.</li>
+    <li>Achenbach, E. (1968). Distribution of local pressure and skin friction around a circular cylinder in cross-flow up to Re = 5×10⁶. <i>J. Fluid Mech.</i> 34, 625–639.</li>
+    <li>Zdravkovich, M.M. (1997). <i>Flow Around Circular Cylinders, Vol. 1.</i> Oxford University Press.</li>
+    <li>Schlichting, H. and Gersten, K. <i>Boundary-Layer Theory.</i> Springer.</li>
+    <li>Krüger, T. et al. (2017). <i>The Lattice Boltzmann Method: Principles and Practice.</i> Springer.</li>
+  </ul>
+</main>
+
+<aside id="sim" aria-label="Simulator">
+  <div class="view">
+    <canvas id="flow" width="320" height="128"></canvas>
+    <div class="overlay" id="overlay" hidden></div>
+  </div>
+  <div class="readout"><b id="reVal">100</b><span>Reynolds number</span><span id="regimeName"></span></div>
+  <input id="slider" type="range" min="0" max="700" value="200" aria-label="Reynolds number (log scale)">
+  <div class="ticks"><span>1</span><span>10</span><span>10²</span><span>10³</span><span>10⁴</span><span>10⁵</span><span>10⁶</span><span>10⁷</span></div>
+  <div class="stats"><div><em>Cd</em> <span id="cdVal">–</span></div><div><em>St</em> <span id="stVal">–</span></div><button id="pause">Pause</button><button id="reset">Restart flow</button></div>
+  <p class="note" id="simNote"></p>
+</aside>
+</div>
+<footer>
+  <div id="credits">Pre-computed clips are added in <code>videos/manifest.js</code>; attribution appears here automatically.</div>
+  <div>Simulator: D2Q9 BGK lattice Boltzmann, periodic top and bottom boundaries (about 1/8 blockage raises St slightly versus an unbounded cylinder).</div>
+</footer>
+<script src="vendor/katex/katex.min.js"></script>
+<script src="vendor/katex/auto-render.min.js"></script>
+<script src="data/cd_st.js"></script>
+<script src="videos/manifest.js"></script>
+<script src="js/lbm.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
