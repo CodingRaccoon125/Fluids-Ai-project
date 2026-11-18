@@ -5,89 +5,373 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Flow past a cylinder: what changes with Reynolds number</title>
 <meta name="description" content="Interactive guide to flow past a circular cylinder, from creeping flow to the drag crisis.">
-<link rel="stylesheet" href="vendor/katex/katex.min.css">
-<link rel="stylesheet" href="css/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>:root{--ink:#31333f;--grey:#808495;--side:#f0f2f6;--line:#e6e9ef;--red:#ff4b4b;--plot:#636efa;
+--sans:"Source Sans 3","Source Sans Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font:1rem/1.6 var(--sans)}
+a{color:var(--red)}
+.app{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}
+#side{background:var(--side);padding:2rem 1.3rem;position:sticky;top:0;height:100vh;overflow:auto}
+#side h2{font-size:1.25rem;margin:0 0 1rem}
+#side label{display:block;font-size:.875rem;margin:1rem 0 .3rem}
+select{width:100%;font:inherit;padding:.4rem .5rem;border:1px solid rgba(49,51,63,.2);border-radius:.5rem;background:#fff;color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--red);margin:.2rem 0}
+.ticks{display:flex;justify-content:space-between;font-size:.7rem;color:var(--grey)}
+.btns{display:flex;gap:.5rem;margin:1.2rem 0 .5rem;flex-wrap:wrap}
+button{font:inherit;font-size:.9rem;background:#fff;color:var(--ink);border:1px solid rgba(49,51,63,.2);border-radius:.5rem;padding:.3rem .8rem;cursor:pointer}
+button:hover{border-color:var(--red);color:var(--red)}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.note{font-size:.85rem;color:var(--grey);margin:.6rem 0}
+.warn{color:#b4531a}
+.main{padding:2.5rem clamp(1rem,4vw,4rem) 2rem;max-width:1150px}
+h1{font-size:2.25rem;line-height:1.2;margin:0 0 .6rem;font-weight:700;letter-spacing:-.01em}
+.lead{max-width:75ch;margin:0 0 1.5rem}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;margin-bottom:1.5rem}
+.metrics label{display:block;font-size:.875rem;color:var(--grey)}
+.metrics b{font-size:1.9rem;font-weight:400;line-height:1.25;font-variant-numeric:tabular-nums}
+.metrics b.sm{font-size:1.1rem;line-height:2.1rem}
+.tabs{display:flex;gap:1.8rem;border-bottom:1px solid var(--line);margin-bottom:1.5rem;overflow-x:auto}
+.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:.5rem 0;white-space:nowrap}
+.tabs button[aria-selected=true]{color:var(--red);border-bottom-color:var(--red)}
+.pane[hidden]{display:none}
+.pane h2{font-size:1.5rem;margin:2rem 0 .5rem}.pane h2:first-child{margin-top:0}
+.pane p,.pane ul{max-width:80ch}
+.view{position:relative;aspect-ratio:5/2;background:#f6f7f9;border:1px solid var(--line);border-radius:.5rem;overflow:hidden}
+.view canvas,.view .overlay{position:absolute;inset:0;width:100%;height:100%}
+.overlay{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;text-align:center;padding:1rem;background:#f6f7f9;font-size:.95rem;color:var(--grey)}
+.overlay video{max-width:100%;max-height:100%}.overlay[hidden]{display:none}
+.plots{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem}
+.plot{width:100%;height:240px;display:block;border:1px solid var(--line);border-radius:.5rem}
+.cap{font-size:.875rem;color:var(--grey);margin:.5rem 0}
+details{border:1px solid var(--line);border-radius:.5rem;margin:.8rem 0;padding:0 1rem;max-width:80ch}
+summary{cursor:pointer;padding:.6rem 0;font-weight:600}
+.regime{border-left:3px solid var(--line);padding:.1rem 0 .1rem 1rem;margin:1.2rem 0;max-width:80ch}
+.regime.active{border-color:var(--red)}
+.regime h3{margin:0;font-size:1.15rem}.regime .re{font-size:.875rem;color:var(--grey)}.regime p{margin:.3rem 0 .5rem}
+ul.refs{font-size:.95rem;padding-left:1.2rem}
+footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--line);font-size:.85rem;color:var(--grey)}
+@media (max-width:900px){.app{grid-template-columns:1fr}#side{position:static;height:auto}.metrics{grid-template-columns:1fr 1fr}.plots{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-<header>
-  <h1>Flow past a cylinder</h1>
-  <p>Drag the Reynolds number slider and watch the wake change, from a symmetric creeping flow to a vortex street and beyond.</p>
-</header>
-<div class="layout">
-<main>
-  <h2>Try it first</h2>
-  <p>The simulator on the right is a real 2D lattice Boltzmann solver running in your browser for Re up to 300. Colors show vorticity: red spins counter-clockwise, blue clockwise. Above Re = 300 a browser can no longer resolve the physics, so the view switches to pre-computed footage.</p>
-  <p>Try Re = 30, then 60, then 200. Somewhere near 47 the steady wake becomes unstable and starts to shed.</p>
-
-  <h2>What the Reynolds number measures</h2>
-  <p>For a cylinder of diameter $D$ in a stream of speed $U$ and kinematic viscosity $\nu$, the Reynolds number is $\mathrm{Re}=UD/\nu$. It compares inertial forces, which carry the flow past the body, with viscous forces, which smooth velocity differences. Small Re means viscosity wins; large Re means inertia wins and the flow becomes unstable.</p>
-  <details><summary>Derivation: Navier-Stokes and nondimensionalization</summary>
-    <p>For incompressible flow of constant density $\rho$ and viscosity $\nu$:</p>
-    $$\frac{\partial \mathbf u}{\partial t}+(\mathbf u\cdot\nabla)\mathbf u=-\frac1\rho\nabla p+\nu\nabla^2\mathbf u,\qquad \nabla\cdot\mathbf u=0.$$
-    <p>Scale lengths by $D$, velocities by $U$, time by $D/U$ and pressure by $\rho U^2$:
-    $\mathbf x^*=\mathbf x/D$, $\mathbf u^*=\mathbf u/U$, $t^*=tU/D$, $p^*=p/\rho U^2$. Substituting, every term in the momentum equation carries a factor $U^2/D$ except the viscous one, which carries $\nu U/D^2$:</p>
-    $$\frac{\partial \mathbf u^*}{\partial t^*}+(\mathbf u^*\cdot\nabla^*)\mathbf u^*=-\nabla^*p^*+\frac{1}{\mathrm{Re}}\nabla^{*2}\mathbf u^*,\qquad \mathrm{Re}=\frac{UD}{\nu}.$$
-    <p>The no-slip condition $\mathbf u^*=0$ on the cylinder and uniform $\mathbf u^*=\hat{\mathbf x}$ far upstream contain no other parameters. Geometrically similar flows with equal Re are therefore the same flow.</p>
-  </details>
-
-  <h2>Regime tour</h2>
-  <p>Boundaries are approximate and vary by source and by free-stream turbulence, surface roughness and end conditions. Each button sets the simulator to a representative Re.</p>
-  <div id="regimes"></div>
-
-  <h2>Drag and shedding versus Re</h2>
-  <p>The plots follow the slider. Curves are approximate values from the literature (see the data file header for sources), not output of the simulator.</p>
-  <canvas id="plotCd" class="plot" role="img" aria-label="Drag coefficient versus Reynolds number"></canvas>
-  <canvas id="plotSt" class="plot" role="img" aria-label="Strouhal number versus Reynolds number"></canvas>
-  <p class="cap">The drag crisis near Re ≈ 3×10⁵ occurs because the boundary layer turns turbulent before separating, which delays separation and narrows the wake.</p>
-  <details><summary>Derivation: drag coefficient</summary>
-    <p>The force on the cylinder comes from pressure and viscous shear on its surface $S$:</p>
-    $$F_D=\oint_S\big(-p\,\mathbf n+\boldsymbol\tau\cdot\mathbf n\big)\cdot\hat{\mathbf x}\,dS,\qquad C_D=\frac{F_D}{\tfrac12\rho U^2DL}.$$
-    <p>Splitting $C_D=C_{D,p}+C_{D,f}$ shows that at low Re friction contributes a large share, while for Re above a few hundred pressure drag from the low-pressure wake dominates. The drag crisis is a change in $C_{D,p}$ caused by where the boundary layer separates.</p>
-  </details>
-  <details><summary>Derivation: Strouhal number</summary>
-    <p>The shedding frequency $f$ can depend only on $\rho, U, D, \mu$. That is five variables in three base dimensions (M, L, T), so the Buckingham Pi theorem gives two independent groups:</p>
-    $$\mathrm{St}=\frac{fD}{U}=\mathrm{St}(\mathrm{Re}),\qquad \mathrm{Re}=\frac{\rho UD}{\mu}.$$
-    <p>For a smooth cylinder St rises from about 0.12 at onset to about 0.2 and stays near that value over the subcritical range, so $f\approx 0.2\,U/D$.</p>
-  </details>
-
-  <h2>Where this matters</h2>
-  <p><strong>Chimneys, risers and cables.</strong> When the shedding frequency approaches a structural natural frequency, the alternating side force causes vortex-induced vibration. Helical strakes and fairings disrupt coherent shedding.</p>
-  <p><strong>Worked example.</strong> Air at 5 m/s past a 0.2 m pipe ($\nu\approx1.5\times10^{-5}$ m²/s) gives $\mathrm{Re}\approx6.7\times10^4$, in the subcritical range, so $f\approx0.2\times5/0.2=5$ Hz.</p>
-  <p><strong>Bridges.</strong> The 1940 Tacoma Narrows collapse is often cited as vortex shedding, but engineering analyses attribute it to self-excited aeroelastic flutter. Shedding does matter for slender hangers and stay cables.</p>
-  <p><strong>Sports balls.</strong> Golf-ball dimples trigger boundary-layer transition at lower Re, producing the same drag-crisis mechanism on a sphere.</p>
-
-  <h2>References</h2>
-  <ul class="refs">
-    <li>Williamson, C.H.K. (1996). Vortex dynamics in the cylinder wake. <i>Annu. Rev. Fluid Mech.</i> 28, 477–539.</li>
-    <li>Roshko, A. (1961). Experiments on the flow past a circular cylinder at very high Reynolds number. <i>J. Fluid Mech.</i> 10, 345–356.</li>
-    <li>Achenbach, E. (1968). Distribution of local pressure and skin friction around a circular cylinder in cross-flow up to Re = 5×10⁶. <i>J. Fluid Mech.</i> 34, 625–639.</li>
-    <li>Zdravkovich, M.M. (1997). <i>Flow Around Circular Cylinders, Vol. 1.</i> Oxford University Press.</li>
-    <li>Schlichting, H. and Gersten, K. <i>Boundary-Layer Theory.</i> Springer.</li>
-    <li>Krüger, T. et al. (2017). <i>The Lattice Boltzmann Method: Principles and Practice.</i> Springer.</li>
-  </ul>
-</main>
-
-<aside id="sim" aria-label="Simulator">
-  <div class="view">
-    <canvas id="flow" width="320" height="128"></canvas>
-    <div class="overlay" id="overlay" hidden></div>
-  </div>
-  <div class="readout"><b id="reVal">100</b><span>Reynolds number</span><span id="regimeName"></span></div>
-  <input id="slider" type="range" min="0" max="700" value="200" aria-label="Reynolds number (log scale)">
-  <div class="ticks"><span>1</span><span>10</span><span>10²</span><span>10³</span><span>10⁴</span><span>10⁵</span><span>10⁶</span><span>10⁷</span></div>
-  <div class="stats"><div><em>Cd</em> <span id="cdVal">–</span></div><div><em>St</em> <span id="stVal">–</span></div><button id="pause">Pause</button><button id="reset">Restart flow</button></div>
+<div class="app">
+<aside id="side" aria-label="Controls">
+  <h2>Controls</h2>
+  <label for="preset">Preset</label><select id="preset"></select>
+  <label for="slider">Reynolds number (log scale)</label>
+  <input id="slider" type="range" min="0" max="700" value="200">
+  <div class="ticks"><span>1</span><span>10²</span><span>10⁴</span><span>10⁶</span><span>10⁷</span></div>
+  <div class="btns"><button id="pause">Pause</button><button id="reset">Restart flow</button></div>
   <p class="note" id="simNote"></p>
+  <p class="note">Colors show vorticity: red turns counter-clockwise, blue clockwise.</p>
 </aside>
+<div class="main">
+  <h1>Flow past a cylinder: what changes with Reynolds number</h1>
+  <p class="lead">A circular cylinder in a steady stream passes through a surprising sequence of wakes as the Reynolds number grows. Move the slider to see a live 2D simulation up to Re = 300, then pre-computed footage beyond.</p>
+  <div class="metrics">
+    <div><label>Reynolds number</label><b id="reVal">–</b></div>
+    <div><label>Regime</label><b class="sm" id="regimeName">–</b></div>
+    <div><label>Drag coefficient Cd (literature)</label><b id="cdVal">–</b></div>
+    <div><label>Strouhal number St (literature)</label><b id="stVal">–</b></div>
+  </div>
+  <div class="tabs" role="tablist">
+    <button role="tab" data-tab="app" aria-selected="true">App</button>
+    <button role="tab" data-tab="theory" aria-selected="false">Theory</button>
+    <button role="tab" data-tab="regimes" aria-selected="false">Regimes</button>
+    <button role="tab" data-tab="world" aria-selected="false">Real world and references</button>
+  </div>
+
+  <section class="pane" id="pane-app">
+    <div class="view"><canvas id="flow" width="320" height="128"></canvas><div class="overlay" id="overlay" hidden></div></div>
+    <p class="cap">Flow is left to right. The simulation is 2D, so it cannot show the 3D wake instabilities that begin near Re ≈ 190. Try Re = 30, 60 and 200: near 47 the steady wake turns unstable and begins to shed.</p>
+    <div class="plots">
+      <canvas id="plotCd" class="plot" role="img" aria-label="Drag coefficient versus Reynolds number"></canvas>
+      <canvas id="plotSt" class="plot" role="img" aria-label="Strouhal number versus Reynolds number"></canvas>
+    </div>
+    <p class="cap">Curves are approximate literature values for a smooth cylinder (not output of the simulator); the dashed line marks the current Re. The drag crisis near Re ≈ 3×10⁵ happens because the boundary layer turns turbulent before it separates, which moves separation downstream and narrows the wake.</p>
+  </section>
+
+  <section class="pane" id="pane-theory" hidden>
+    <h2>1. The physical picture</h2>
+    <p>Fluid of speed $U$ and kinematic viscosity $\nu$ meets a cylinder of diameter $D$. The no-slip condition forms a boundary layer on the surface. On the rear half the pressure rises along the flow, and when the layer can no longer overcome that adverse gradient it separates and forms a wake. The Reynolds number $\mathrm{Re}=UD/\nu$ decides how that wake looks, because it measures inertial forces (which carry and stretch vorticity) against viscous forces (which smooth it).</p>
+    <h2>2. Governing equations and the Reynolds number</h2>
+    <details><summary>Derivation: Navier-Stokes and nondimensionalization</summary>
+      <p>For incompressible flow of constant density $\rho$ and viscosity $\nu$:</p>
+      $$\frac{\partial \mathbf u}{\partial t}+(\mathbf u\cdot\nabla)\mathbf u=-\frac1\rho\nabla p+\nu\nabla^2\mathbf u,\qquad \nabla\cdot\mathbf u=0.$$
+      <p>Scale lengths by $D$, velocities by $U$, time by $D/U$ and pressure by $\rho U^2$: $\mathbf x^*=\mathbf x/D$, $\mathbf u^*=\mathbf u/U$, $t^*=tU/D$, $p^*=p/\rho U^2$. Every term then carries a factor $U^2/D$ except the viscous one, which carries $\nu U/D^2$. Dividing through:</p>
+      $$\frac{\partial \mathbf u^*}{\partial t^*}+(\mathbf u^*\cdot\nabla^*)\mathbf u^*=-\nabla^*p^*+\frac{1}{\mathrm{Re}}\nabla^{*2}\mathbf u^*,\qquad \mathrm{Re}=\frac{UD}{\nu}.$$
+      <p>The no-slip condition $\mathbf u^*=0$ on the cylinder and uniform $\mathbf u^*=\hat{\mathbf x}$ far upstream add no other parameters, so geometrically similar flows with equal Re are the same flow.</p>
+    </details>
+    <h2>3. Drag coefficient</h2>
+    <details><summary>Derivation: drag from pressure and shear</summary>
+      <p>The force on the cylinder comes from pressure and viscous shear on its surface $S$ (length $L$ along the axis):</p>
+      $$F_D=\oint_S\big(-p\,\mathbf n+\boldsymbol\tau\cdot\mathbf n\big)\cdot\hat{\mathbf x}\,dS,\qquad C_D=\frac{F_D}{\tfrac12\rho U^2DL}.$$
+      <p>Splitting $C_D=C_{D,p}+C_{D,f}$ shows that friction is a large share at low Re, while above a few hundred pressure drag from the low-pressure wake dominates. The drag crisis is a sudden drop in $C_{D,p}$ caused by delayed separation.</p>
+    </details>
+    <h2>4. Vortex shedding and the Strouhal number</h2>
+    <details><summary>Derivation: why St depends only on Re</summary>
+      <p>The shedding frequency $f$ can depend only on $\rho,U,D,\mu$: five variables in three base dimensions (M, L, T). The Buckingham Pi theorem gives two independent groups:</p>
+      $$\mathrm{St}=\frac{fD}{U}=\mathrm{St}(\mathrm{Re}),\qquad \mathrm{Re}=\frac{\rho UD}{\mu}.$$
+      <p>For a smooth cylinder St rises from about 0.12 at onset to about 0.2 and stays near that over the subcritical range, so $f\approx0.2\,U/D$.</p>
+    </details>
+    <h2>5. How the live simulator works</h2>
+    <p>The simulator is a D2Q9 lattice Boltzmann solver with BGK collision. In lattice units the viscosity is $\nu=(\tau-\tfrac12)/3$, so with the inlet speed $U=0.12$ and a cylinder $D=16$ cells wide, the relaxation time is set from the slider by $\tau=\tfrac12+3UD/\mathrm{Re}$ (about 0.519 at Re = 300). The inlet imposes equilibrium at speed $U$, the outlet copies the neighboring column, the top and bottom wrap around, and the cylinder uses half-way bounce-back.</p>
+    <details><summary>Limitations and a sanity check</summary>
+      <p>The model is 2D, the lattice Mach number is about 0.2, the circle is stair-stepped, and the periodic walls give about 1/8 blockage. In headless tests the flow stayed steady at Re = 20 and shed periodically at Re = 100 with St ≈ 0.18, a little above the ≈ 0.165 expected for an unbounded cylinder, which is plausible given the blockage.</p>
+    </details>
+  </section>
+
+  <section class="pane" id="pane-regimes" hidden>
+    <h2>Regime tour</h2>
+    <p>Boundaries are approximate and shift with free-stream turbulence, surface roughness and end conditions. Each button loads a representative Re in the App tab.</p>
+    <div id="regimes"></div>
+  </section>
+
+  <section class="pane" id="pane-world" hidden>
+    <h2>Where this matters</h2>
+    <p><strong>Chimneys, risers and cables.</strong> When the shedding frequency approaches a structural natural frequency, the alternating side force drives vortex-induced vibration. Helical strakes and fairings disrupt coherent shedding.</p>
+    <p><strong>Worked example.</strong> Air at 5 m/s past a 0.2 m pipe ($\nu\approx1.5\times10^{-5}$ m²/s) gives $\mathrm{Re}\approx6.7\times10^4$, in the subcritical range, so $f\approx0.2\times5/0.2=5$ Hz.</p>
+    <p><strong>Bridges.</strong> The 1940 Tacoma Narrows collapse is often cited as vortex shedding, but engineering analyses attribute it to self-excited aeroelastic flutter. Shedding does matter for slender hangers and stay cables.</p>
+    <p><strong>Sports balls.</strong> Golf-ball dimples trigger boundary-layer transition at lower Re, producing the same drag-crisis mechanism on a sphere.</p>
+    <h2>References</h2>
+    <ul class="refs">
+      <li>Williamson, C.H.K. (1996). Vortex dynamics in the cylinder wake. <i>Annu. Rev. Fluid Mech.</i> 28, 477–539.</li>
+      <li>Roshko, A. (1961). Experiments on the flow past a circular cylinder at very high Reynolds number. <i>J. Fluid Mech.</i> 10, 345–356.</li>
+      <li>Achenbach, E. (1968). Distribution of local pressure and skin friction around a circular cylinder in cross-flow up to Re = 5×10⁶. <i>J. Fluid Mech.</i> 34, 625–639.</li>
+      <li>Zdravkovich, M.M. (1997). <i>Flow Around Circular Cylinders, Vol. 1.</i> Oxford University Press.</li>
+      <li>Schlichting, H. and Gersten, K. <i>Boundary-Layer Theory.</i> Springer.</li>
+      <li>Krüger, T. et al. (2017). <i>The Lattice Boltzmann Method: Principles and Practice.</i> Springer.</li>
+    </ul>
+  </section>
+  <footer><div id="credits">Pre-computed clips: none added yet (see README).</div></footer>
 </div>
-<footer>
-  <div id="credits">Pre-computed clips are added in <code>videos/manifest.js</code>; attribution appears here automatically.</div>
-  <div>Simulator: D2Q9 BGK lattice Boltzmann, periodic top and bottom boundaries (about 1/8 blockage raises St slightly versus an unbounded cylinder).</div>
-</footer>
-<script src="vendor/katex/katex.min.js"></script>
-<script src="vendor/katex/auto-render.min.js"></script>
-<script src="data/cd_st.js"></script>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script src="videos/manifest.js"></script>
-<script src="js/lbm.js"></script>
-<script src="js/main.js"></script>
+<script>/* APPROXIMATE curves for a smooth circular cylinder, read off from the literature.
+   Cd: Schlichting, Boundary-Layer Theory; Achenbach (1968); Roshko (1961); Zdravkovich (1997).
+   St: Williamson (1996) fit St = -3.3265/Re + 0.1816 + 1.6e-4*Re for 49<Re<178; ~0.2 subcritical;
+       ~0.27 post-critical (Roshko 1961, Achenbach & Heinecke 1981). St is ill-defined in the critical range.
+   Check against the primary sources before using these numbers for design work. */
+window.CDST = {
+  cd: [[1,10],[3,5],[10,2.8],[30,1.7],[40,1.55],[100,1.3],[300,1.3],[1e3,1.05],[3e3,1.1],[1e4,1.2],
+       [1e5,1.2],[2e5,1.2],[3e5,1.0],[4e5,0.5],[5e5,0.35],[7e5,0.4],[1e6,0.5],[3e6,0.6],[1e7,0.7]],
+  st: [ [[47,0.119],[50,0.123],[60,0.136],[80,0.153],[100,0.164],[150,0.183],[178,0.191],[250,0.2],[1e3,0.2],[1e5,0.2],[2e5,0.2]],
+        [[4e6,0.27],[1e7,0.27]] ]
+};
+</script>
+<script>/* D2Q9 lattice Boltzmann (BGK) solver for flow past a circular cylinder.
+   Inlet: equilibrium at speed U. Outlet: zero-gradient. Top/bottom: periodic.
+   Cylinder: half-way bounce-back (no-slip). Units: lattice units, Re = U*D/nu. */
+class LBM {
+  constructor(nx = 400, ny = 160, D = 20, U = 0.12) {
+    this.nx = nx; this.ny = ny; this.D = D; this.U = U;
+    const N = nx * ny; this.N = N;
+    this.ex = [0, 1, 0, -1, 0, 1, -1, -1, 1];
+    this.ey = [0, 0, 1, 0, -1, 1, 1, -1, -1];
+    this.w = [4 / 9, 1 / 9, 1 / 9, 1 / 9, 1 / 9, 1 / 36, 1 / 36, 1 / 36, 1 / 36];
+    this.opp = [0, 3, 4, 1, 2, 7, 8, 5, 6];
+    this.f = new Float32Array(9 * N); this.g = new Float32Array(9 * N);
+    this.rho = new Float32Array(N); this.ux = new Float32Array(N); this.uy = new Float32Array(N);
+    this.solid = new Uint8Array(N);
+    this.cx = Math.round(nx / 5); this.cy = ny / 2 + 0.5;
+    const r = D / 2;
+    for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++)
+      if ((x - this.cx) ** 2 + (y - this.cy) ** 2 <= r * r) this.solid[x + y * nx] = 1;
+    this.setRe(100); this.reset();
+  }
+  setRe(Re) { this.Re = Re; this.tau = 0.5 + 3 * this.U * this.D / Re; this.omega = 1 / this.tau; }
+  feq(k, rho, u, v) {
+    const eu = this.ex[k] * u + this.ey[k] * v, uu = u * u + v * v;
+    return this.w[k] * rho * (1 + 3 * eu + 4.5 * eu * eu - 1.5 * uu);
+  }
+  reset() {
+    const { nx, ny, N, f } = this;
+    for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++) {
+      const i = x + y * nx, v = 0.02 * this.U * Math.sin(2 * Math.PI * x / nx * 3); // seed asymmetry
+      for (let k = 0; k < 9; k++) f[k * N + i] = this.feq(k, 1, this.U, v);
+    }
+    this.t = 0; this.ok = true;
+  }
+  step() {
+    const { nx, ny, N, ex, ey, w, opp, solid, omega, rho, ux, uy } = this;
+    let f = this.f, g = this.g;
+    // collide (in place)
+    for (let i = 0; i < N; i++) {
+      if (solid[i]) { rho[i] = 1; ux[i] = uy[i] = 0; continue; }
+      let r = 0, u = 0, v = 0;
+      for (let k = 0; k < 9; k++) { const q = f[k * N + i]; r += q; u += q * ex[k]; v += q * ey[k]; }
+      u /= r; v /= r; rho[i] = r; ux[i] = u; uy[i] = v;
+      const uu = 1.5 * (u * u + v * v);
+      for (let k = 0; k < 9; k++) {
+        const eu = ex[k] * u + ey[k] * v, e = w[k] * r * (1 + 3 * eu + 4.5 * eu * eu - uu);
+        f[k * N + i] += omega * (e - f[k * N + i]);
+      }
+    }
+    // stream (pull) with bounce-back and periodic y
+    for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++) {
+      const i = x + y * nx; if (solid[i]) continue;
+      for (let k = 0; k < 9; k++) {
+        let sx = x - ex[k]; const sy = (y - ey[k] + ny) % ny;
+        if (sx < 0) sx = 0; else if (sx >= nx) sx = nx - 1;
+        const s = sx + sy * nx;
+        g[k * N + i] = solid[s] ? f[opp[k] * N + i] : f[k * N + s];
+      }
+    }
+    // inlet (equilibrium) and outlet (copy)
+    for (let y = 0; y < ny; y++) for (let k = 0; k < 9; k++) {
+      g[k * N + y * nx] = this.feq(k, 1, this.U, 0);
+      g[k * N + nx - 1 + y * nx] = g[k * N + nx - 2 + y * nx];
+    }
+    this.f = g; this.g = f; this.t++;
+    const p = rho[(this.cx + 3 * this.D) + (ny >> 1) * nx];
+    if (!(p > 0.5 && p < 1.5)) this.ok = false; // blow-up guard
+  }
+  vorticity(i) { const nx = this.nx, u = this.uy, v = this.ux;
+    return (u[i + 1] - u[i - 1]) * 0.5 - (v[i + nx] - v[i - nx]) * 0.5; }
+}
+if (typeof module !== 'undefined') module.exports = LBM;
+</script>
+<script>(() => {
+  const LIVE_MAX = 300;
+  const REGIMES = [
+    {id:'creeping', name:'Creeping flow', lo:1, hi:5, jump:2, text:'Viscosity dominates. Streamlines close symmetrically behind the cylinder with no separation.'},
+    {id:'steady', name:'Steady separated flow', lo:5, hi:47, jump:30, text:'Flow separates and a pair of steady, counter-rotating eddies grows with Re. The wake is still symmetric.'},
+    {id:'street', name:'Laminar vortex street', lo:47, hi:190, jump:100, text:'Near Re ≈ 47 the steady wake becomes unstable (a Hopf bifurcation) and vortices shed alternately, giving St ≈ 0.12 to 0.19.'},
+    {id:'wake3d', name:'Three-dimensional wake transition', lo:190, hi:300, jump:250, text:'Spanwise instabilities (modes A and B) appear and the wake becomes three-dimensional. A 2D simulation cannot capture this, so the live view is only qualitative here.'},
+    {id:'subcritical', name:'Subcritical', lo:300, hi:3e5, jump:3e4, video:'subcritical', text:'The boundary layer stays laminar and separates near 80° from the front stagnation point. The wake is turbulent with strong periodic shedding, St ≈ 0.2 and Cd ≈ 1.2.'},
+    {id:'critical', name:'Critical and drag crisis', lo:3e5, hi:3.5e6, jump:5e5, video:'critical', text:'The boundary layer becomes turbulent before separating, so separation moves downstream. The wake narrows and Cd drops sharply to about 0.3. Shedding is irregular.'},
+    {id:'postcritical', name:'Post-critical', lo:3.5e6, hi:1e7, jump:5e6, video:'postcritical', text:'The boundary layer is turbulent over the front of the cylinder. Cd recovers to about 0.6 to 0.7 and regular shedding returns with St ≈ 0.27.'}
+  ];
+  const $ = id => document.getElementById(id);
+  const fmt = r => r < 1000 ? (r < 10 ? r.toFixed(1) : Math.round(r)) : r.toExponential(1).replace('e+', '×10^').replace(/\^(\d+)/, (_, n) => [...n].map(c => '⁰¹²³⁴⁵⁶⁷⁸⁹'[c]).join(''));
+  const dark = () => false;
+  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const slider = $('slider'), cv = $('flow'), ctx = cv.getContext('2d'), overlay = $('overlay');
+  const sim = new LBM(320, 128, 16, 0.12);
+  const img = ctx.createImageData(sim.nx, sim.ny);
+  let Re = 100, paused = false, live = true;
+
+  // ----- regime cards
+  const box = $('regimes');
+  REGIMES.forEach(r => {
+    const d = document.createElement('div'); d.className = 'regime'; d.id = 'r-' + r.id;
+    d.innerHTML = `<h3>${r.name}</h3><div class="re">Re ≈ ${fmt(r.lo)} to ${fmt(r.hi)}</div><p>${r.text}</p>`;
+    const b = document.createElement('button'); b.textContent = `Show Re = ${fmt(r.jump)}`;
+    b.onclick = () => { slider.value = Math.round(Math.log10(r.jump) * 100); update(); showTab('app'); };
+    d.appendChild(b); box.appendChild(d);
+  });
+
+  // ----- interpolation on data
+  function interp(a, x) {
+    if (x < a[0][0] || x > a[a.length - 1][0]) return null;
+    for (let i = 1; i < a.length; i++) if (x <= a[i][0]) {
+      const t = Math.log(x / a[i - 1][0]) / Math.log(a[i][0] / a[i - 1][0]);
+      return a[i - 1][1] + t * (a[i][1] - a[i - 1][1]);
+    }
+  }
+  const stAt = x => { for (const s of CDST.st) { const v = interp(s, x); if (v != null) return v; } return null; };
+
+  // ----- overlay for pre-computed regimes
+  function showPre(reg) {
+    const v = (window.VIDEOS || {})[reg.video];
+    overlay.hidden = false;
+    if (v && v.file) {
+      overlay.innerHTML = `<video src="videos/${v.file}" autoplay loop muted playsinline></video>`;
+    } else {
+      overlay.innerHTML = `<strong>Pre-computed footage not added yet</strong><span>Add a clip for “${reg.name}” in videos/manifest.js. A live 2D simulation cannot resolve this regime.</span>`;
+    }
+  }
+
+  // ----- main update
+  let lastReg = null;
+  function update() {
+    Re = Math.pow(10, slider.value / 100);
+    const reg = REGIMES.find(r => Re >= r.lo && Re < r.hi) || REGIMES[REGIMES.length - 1];
+    $('reVal').textContent = fmt(Re); $('regimeName').textContent = reg.name;
+    document.querySelectorAll('.regime').forEach(e => e.classList.toggle('active', e.id === 'r-' + reg.id));
+    const cd = interp(CDST.cd, Re), st = stAt(Re);
+    $('cdVal').textContent = cd == null ? '–' : cd.toFixed(2);
+    $('stVal').textContent = st == null ? 'n/a' : st.toFixed(3);
+    const wasLive = live; live = Re <= LIVE_MAX;
+    const note = $('simNote');
+    if (live) {
+      overlay.hidden = true; sim.setRe(Re);
+      if (!wasLive) sim.reset();
+      note.className = 'note' + (Re >= 190 ? ' warn' : '');
+      note.textContent = Re >= 190 ? 'Live 2D simulation. The real wake is three-dimensional above Re ≈ 190, which this 2D model cannot show.'
+        : 'Live simulation. Cd and St above come from literature curves, not from this simulation.';
+    } else {
+      showPre(reg); note.className = 'note'; note.textContent = 'Pre-computed footage, not a live simulation.';
+    }
+    lastReg = reg; drawPlots();
+  }
+
+  // ----- render flow
+  function render() {
+    const { nx, ny, solid } = sim, d = img.data, dk = dark();
+    const bg = dk ? [15, 22, 29] : [245, 247, 249], neg = dk ? [90, 170, 255] : [29, 95, 166], pos = dk ? [255, 140, 90] : [196, 60, 40];
+    for (let y = 1; y < ny - 1; y++) for (let x = 1; x < nx - 1; x++) {
+      const i = x + y * nx, o = i * 4;
+      if (solid[i]) { d[o] = 80; d[o + 1] = 90; d[o + 2] = 100; d[o + 3] = 255; continue; }
+      const w = Math.max(-1, Math.min(1, sim.vorticity(i) / 0.06)), a = Math.min(1, Math.abs(w) ** 0.8), c = w > 0 ? pos : neg;
+      d[o] = bg[0] + (c[0] - bg[0]) * a; d[o + 1] = bg[1] + (c[1] - bg[1]) * a; d[o + 2] = bg[2] + (c[2] - bg[2]) * a; d[o + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  function frame() {
+    if (live && !paused) {
+      const t0 = performance.now(); let n = 0;
+      while (n < 12 && performance.now() - t0 < 12) { sim.step(); n++; }
+      if (!sim.ok) { sim.reset(); }
+    }
+    if (live) render();
+    requestAnimationFrame(frame);
+  }
+
+  // ----- plots
+  function drawPlot(c, data, opts) {
+    const dpr = devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    c.width = W * dpr; c.height = H * dpr;
+    const g = c.getContext('2d'); g.scale(dpr, dpr);
+    const m = {l: 44, r: 12, t: 12, b: 28}, X = r => m.l + (Math.log10(r) / 7) * (W - m.l - m.r), Y = v => H - m.b - (v - opts.y0) / (opts.y1 - opts.y0) * (H - m.t - m.b);
+    const ink = css('--ink'), mut = css('--muted'), line = css('--line'), acc = css('--plot');
+    g.font = '11px "Source Sans 3", system-ui, sans-serif'; g.textAlign = 'center'; g.fillStyle = mut; g.strokeStyle = line; g.lineWidth = 1;
+    for (let p = 0; p <= 7; p++) { g.beginPath(); g.moveTo(X(10 ** p), m.t); g.lineTo(X(10 ** p), H - m.b); g.stroke(); g.fillText('10' + '⁰¹²³⁴⁵⁶⁷'[p], X(10 ** p), H - 10); }
+    g.textAlign = 'right';
+    for (let v = opts.y0; v <= opts.y1 + 1e-9; v += opts.dy) { g.beginPath(); g.moveTo(m.l, Y(v)); g.lineTo(W - m.r, Y(v)); g.stroke(); g.fillText(v.toFixed(opts.dec), m.l - 6, Y(v) + 4); }
+    g.fillStyle = ink; g.textAlign = 'left'; g.fillText(opts.label, m.l + 6, m.t + 12);
+    g.strokeStyle = acc; g.lineWidth = 2;
+    data.forEach(seg => { g.beginPath(); seg.forEach((p, i) => { const px = X(p[0]), py = Y(Math.min(p[1], opts.y1)); i ? g.lineTo(px, py) : g.moveTo(px, py); }); g.stroke(); });
+    g.strokeStyle = ink; g.lineWidth = 1; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(X(Re), m.t); g.lineTo(X(Re), H - m.b); g.stroke(); g.setLineDash([]);
+  }
+  function drawPlots() {
+    drawPlot($('plotCd'), [CDST.cd], {y0: 0, y1: 3, dy: 1, dec: 0, label: 'Cd (curve clipped at 3 for Re < 10)'});
+    drawPlot($('plotSt'), CDST.st, {y0: 0, y1: 0.3, dy: 0.1, dec: 1, label: 'St (undefined in the critical range)'});
+  }
+
+  // ----- controls and credits
+  slider.addEventListener('input', update);
+  $('pause').onclick = e => { paused = !paused; e.target.textContent = paused ? 'Resume' : 'Pause'; };
+  $('reset').onclick = () => sim.reset();
+  addEventListener('resize', drawPlots);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', drawPlots);
+  const cr = Object.entries(window.VIDEOS || {}).filter(([, v]) => v.file);
+  if (cr.length) $('credits').innerHTML = 'Video credits: ' + cr.map(([, v]) => `${v.author}, <a href="${v.source}">${v.license}</a>`).join('; ');
+  const tabs = [...document.querySelectorAll('.tabs button')];
+  function showTab(n) { tabs.forEach(b => b.setAttribute('aria-selected', b.dataset.tab === n)); document.querySelectorAll('.pane').forEach(p => p.hidden = p.id !== 'pane-' + n); if (n === 'app') drawPlots(); }
+  tabs.forEach(b => b.onclick = () => showTab(b.dataset.tab));
+  const preset = $('preset');
+  preset.innerHTML = '<option value="">Custom</option>' + REGIMES.map(r => `<option value="${r.jump}">Re = ${fmt(r.jump)}: ${r.name}</option>`).join('');
+  preset.onchange = () => { if (preset.value) { slider.value = Math.round(Math.log10(+preset.value) * 100); update(); } };
+  slider.addEventListener('input', () => { preset.value = ''; });
+  addEventListener('load', () => { if (window.renderMathInElement) renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], ignoredTags: ['script', 'style', 'textarea', 'pre', 'code', 'canvas']}); });
+  update(); requestAnimationFrame(frame);
+})();
+</script>
 </body>
 </html>
